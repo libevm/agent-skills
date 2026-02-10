@@ -129,7 +129,7 @@ After generation completes:
 When the user asks for changes:
 - **"Try again" / "Give me options"**: Regenerate with `--count=3`
 - **"Make it more [adjective]"**: Adjust prompt and regenerate
-- **"Edit this one"**: Use `gemini --yolo "/edit nanobanana-output/filename.png 'adjustment'"`
+- **"Edit this one"**: Use `gemini --yolo "/edit nano-banana-output/filename.png 'adjustment'"`
 - **"Different style"**: Add `--styles="requested_style"` to the command
 
 ## Prompt Tips
