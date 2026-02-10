@@ -115,12 +115,12 @@ gemini --yolo "/diagram 'user authentication flow with OAuth' --type='flowchart'
 
 ## Output Location
 
-All generated images are saved to `./nano-banana-output/` in the current directory.
+All generated images are saved to `./nanobanana-output/` in the current directory.
 
 ## Presenting Results
 
 After generation completes:
-1. List contents of `./nano-banana-output/` to find generated files
+1. List contents of `./nanobanana-output/` to find generated files
 2. Present the most recent image(s) to the user
 3. Offer to regenerate with variations if needed
 
@@ -129,7 +129,7 @@ After generation completes:
 When the user asks for changes:
 - **"Try again" / "Give me options"**: Regenerate with `--count=3`
 - **"Make it more [adjective]"**: Adjust prompt and regenerate
-- **"Edit this one"**: Use `gemini --yolo "/edit nano-banana-output/filename.png 'adjustment'"`
+- **"Edit this one"**: Use `gemini --yolo "/edit nanobanana-output/filename.png 'adjustment'"`
 - **"Different style"**: Add `--styles="requested_style"` to the command
 
 ## Prompt Tips
