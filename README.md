@@ -22,14 +22,8 @@ You will need node.js for the majority of additional features.
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
 nvm install --lts
-```
 
-"std" pi-skills (web browsing etc).
-
-```bash
-# User level
+# Install skills
 git clone https://github.com/badlogic/pi-skills ~/.pi/agent/skills/pi-skills
-
-# Or project-level
-git clone https://github.com/badlogic/pi-skills .pi/skills/pi-skills
+cp -r skills/* ~/.pi/agent/skills
 ```
