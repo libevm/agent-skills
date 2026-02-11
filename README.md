@@ -27,3 +27,14 @@ nvm install --lts
 git clone https://github.com/badlogic/pi-skills ~/.pi/agent/skills/pi-skills
 cp -r skills/* ~/.pi/agent/skills
 ```
+
+## Image
+
+We will be using nano-banana to generate images
+
+```bash
+npm install -g @anthropic-ai/gemini-cli
+export GEMINI_API_KEY="your-api-key"
+gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
+```
+

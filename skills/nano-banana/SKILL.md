@@ -1,111 +1,150 @@
 ---
 name: nano-banana
-description: REQUIRED for image generation and conversational editing via the Gemini REST API. Handles text-to-image, image-to-image (editing), and multi-turn visual refinement. Use this skill when the user requests creation, modification, or design of any visual asset.
-allowed-tools: Bash(curl, jq, base64)
+description: REQUIRED for all image generation requests. Generate and edit images using Nano Banana (Gemini CLI). Handles blog featured images, YouTube thumbnails, icons, diagrams, patterns, illustrations, photos, visual assets, graphics, artwork, pictures. Use this skill whenever the user asks to create, generate, make, draw, design, or edit any image or visual content.
+allowed-tools: Bash(gemini:*)
 ---
 
-# Nano Banana Image Skill (REST API)
+# Nano Banana Image Generation
 
-Direct integration with Gemini's native image generation capabilities (Nano Banana).
+Generate professional images via the Gemini CLI's nanobanana extension.
 
-## ⚠️ Environment & Dependency Check
+## When to Use This Skill
 
-Before execution, verify the environment. **If `curl` is missing, alert the user immediately.**
+ALWAYS use this skill when the user:
+- Asks for any image, graphic, illustration, or visual
+- Wants a thumbnail, featured image, or banner
+- Requests icons, diagrams, or patterns
+- Asks to edit, modify, or restore a photo
+- Uses words like: generate, create, make, draw, design, visualize
 
+Do NOT attempt to generate images through any other method.
+
+## Before First Use
+
+1. Verify extension is installed:
+   ```bash
+   gemini extensions list | grep nanobanana
+   ```
+2. If missing, install it:
+   ```bash
+   gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
+   ```
+3. Verify API key is set:
+   ```bash
+   [ -n "$GEMINI_API_KEY" ] && echo "API key configured" || echo "Missing GEMINI_API_KEY"
+   ```
+
+## Command Selection
+
+| User Request | Command |
+|--------------|---------|
+| "make me a blog header" | `/generate` |
+| "create an app icon" | `/icon` |
+| "draw a flowchart of..." | `/diagram` |
+| "fix this old photo" | `/restore` |
+| "remove the background" | `/edit` |
+| "create a repeating texture" | `/pattern` |
+| "make a comic strip" | `/story` |
+
+## Available Commands
+
+**Note:** Always use the `--yolo` flag to automatically approve all tool actions.
+
+| Command | Use Case |
+|---------|----------|
+| `gemini --yolo "/generate 'prompt'"` | Text-to-image generation |
+| `gemini --yolo "/edit file.png 'instruction'"` | Modify existing image |
+| `gemini --yolo "/restore old_photo.jpg 'fix scratches'"` | Repair damaged photos |
+| `gemini --yolo "/icon 'description'"` | App icons, favicons, UI elements |
+| `gemini --yolo "/diagram 'description'"` | Flowcharts, architecture diagrams |
+| `gemini --yolo "/pattern 'description'"` | Seamless textures and patterns |
+| `gemini --yolo "/story 'description'"` | Sequential/narrative images |
+| `gemini --yolo "/nanobanana prompt"` | Natural language interface |
+
+## Common Options
+
+- `--yolo` - **Required.** Auto-approve all tool actions (no confirmation prompts)
+- `--count=N` - Generate N variations (1-8)
+- `--preview` - Auto-open generated images
+- `--styles="style1,style2"` - Apply artistic styles
+- `--format=grid|separate` - Output arrangement
+
+## Common Sizes
+
+| Use Case | Dimensions | Notes |
+|----------|------------|-------|
+| YouTube thumbnail | 1280x720 | `--aspect=16:9` |
+| Blog featured image | 1200x630 | Social preview friendly |
+| Square social | 1080x1080 | Instagram, LinkedIn |
+| Twitter/X header | 1500x500 | Wide banner |
+| Vertical story | 1080x1920 | `--aspect=9:16` |
+
+## Model Selection
+
+Default: `gemini-2.5-flash-image` (~$0.04/image)
+
+For higher quality (4K, better reasoning):
 ```bash
-# 1. Check for curl (Critical)
-if ! command -v curl &> /dev/null; then
-    echo "ERROR: 'curl' is not installed. This skill requires curl for API communication."
-    exit 1
-fi
-
-# 2. Check for API Key
-[ -z "$GEMINI_API_KEY" ] && echo "ERROR: GEMINI_API_KEY is not set." && exit 1
-
+export NANOBANANA_MODEL=gemini-3-pro-image-preview
 ```
 
-## 🛠 Model Selection & Endpoints
-
-| Model Name | API ID | Best For |
-| --- | --- | --- |
-| **Nano Banana** | `gemini-2.5-flash-image` | High-volume, low-latency, fast generation. |
-| **Nano Banana Pro** | `gemini-3-pro-image-preview` | Professional assets, 4K, complex text rendering. |
-
-**Base Endpoint:** `https://generativelanguage.googleapis.com/v1beta/models/{MODEL_ID}:generateContent?key=$GEMINI_API_KEY`
-
----
-
-## 1. Image Generation (Text-to-Image)
-
-Generates images based on a text description. The `responseModalities` MUST be set to `["IMAGE"]`.
-
-### Example: Fancy Nano Banana Dish
+## Blog Featured Image Examples
 
 ```bash
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=$GEMINI_API_KEY" \
--H "Content-Type: application/json" \
--d '{
-  "contents": [{
-    "parts": [{"text": "Create a picture of a nano banana dish in a fancy restaurant with a Gemini theme"}]
-  }],
-  "generationConfig": {
-    "responseModalities": ["IMAGE"],
-    "imageConfig": {
-      "aspectRatio": "16:9",
-      "imageSize": "1K"
-    }
-  }
-}' | jq -r '.candidates[0].content.parts[0].inlineData.data' | base64 -d > nano_banana.png
+# Modern illustration style
+gemini --yolo "/generate 'modern flat illustration of developer coding at laptop, purple and blue gradient background, minimalist style, no text' --preview"
 
+# Professional photography style
+gemini --yolo "/generate 'professional editorial photo of coffee cup next to laptop on wooden desk, morning sunlight, shallow depth of field, no text' --count=3"
+
+# Tech/abstract
+gemini --yolo "/generate 'abstract visualization of neural network connections, dark background with glowing blue nodes, futuristic style' --preview"
 ```
 
----
-
-## 2. Image Editing (Image-to-Image)
-
-Modify an existing image by providing the original file and instructions.
-
-### Example: Edit specific elements
+## Icon Generation
 
 ```bash
-# Encode original image
-B64_IMAGE=$(base64 -w 0 input_image.png)
-
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=$GEMINI_API_KEY" \
--H "Content-Type: application/json" \
--d "{
-  \"contents\": [{
-    \"parts\": [
-      { \"text\": \"Change the lighting to golden hour and add a cyberpunk neon sign in the background\" },
-      { \"inlineData\": { \"mimeType\": \"image/png\", \"data\": \"$B64_IMAGE\" } }
-    ]
-  }],
-  \"generationConfig\": { \"responseModalities\": [\"IMAGE\"] }
-}" | jq -r '.candidates[0].content.parts[0].inlineData.data' | base64 -d > edited_banana.png
-
+gemini --yolo "/icon 'minimalist app logo for productivity tool' --sizes='64,128,256,512' --type='app-icon' --corners='rounded'"
 ```
 
----
+## Diagram Generation
 
-## 📑 API Reference: `generationConfig`
+```bash
+gemini --yolo "/diagram 'user authentication flow with OAuth' --type='flowchart' --style='modern'"
+```
 
-These parameters go inside the `generationConfig.imageConfig` block.
+## Output Location
 
-| Parameter | Options / Values | Description |
-| --- | --- | --- |
-| **aspectRatio** | `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9` | Default is `1:1`. Gemini 3 supports more variations. |
-| **imageSize** | `1K`, `2K`, `4K` | Default `1K`. `4K` is available on Pro models only. |
-| **personGeneration** | `dont_allow`, `allow_adult`, `allow_all` | `allow_adult` is default. `allow_all` includes children (restricted in some regions). |
-| **candidateCount** | `1` to `4` (or `8`) | Number of variations to return. |
-| **negativePrompt** | `string` | Describe what NOT to include in the image. |
-| **outputMimeType** | `image/png`, `image/jpeg` | Format of the generated image. |
+All generated images are saved to `./nanobanana-output/` in the current directory.
 
----
+## Presenting Results
 
-## 💡 Troubleshooting & Best Practices
+After generation completes:
+1. List contents of `./nanobanana-output/` to find generated files
+2. Present the most recent image(s) to the user
+3. Offer to regenerate with variations if needed
 
-* **Base64 extraction**: If `jq` is missing, use `sed 's/.*"data": "\(.*\)".*/\1/'` to extract the payload.
-* **Request Size**: Inline data is limited to **20MB**. For larger images, use the Gemini Files API to upload first.
-* **Prompting**: Be specific about medium (e.g., "oil painting", "DSLR photo"), lighting, and composition.
-* **Refinement**: For multi-turn editing, always include the **most recent** generated image in the next request's `parts` array to maintain context.
+## Refinements and Iterations
 
+When the user asks for changes:
+- **"Try again" / "Give me options"**: Regenerate with `--count=3`
+- **"Make it more [adjective]"**: Adjust prompt and regenerate
+- **"Edit this one"**: Use `gemini --yolo "/edit nanobanana-output/filename.png 'adjustment'"`
+- **"Different style"**: Add `--styles="requested_style"` to the command
+
+## Prompt Tips
+
+1. **Be specific**: Include style, mood, colors, composition details
+2. **Add "no text"**: If you don't want text rendered in the image
+3. **Reference styles**: "editorial photography", "flat illustration", "3D render", "watercolor"
+4. **Specify aspect ratio context**: "wide banner", "square thumbnail", "vertical story"
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `GEMINI_API_KEY` not set | `export GEMINI_API_KEY="your-key"` |
+| Extension not found | Run install command from setup section |
+| Quota exceeded | Wait for reset or switch to flash model |
+| Image generation failed | Check prompt for policy violations, simplify request |
+| Output directory missing | Will be created automatically on first run |
