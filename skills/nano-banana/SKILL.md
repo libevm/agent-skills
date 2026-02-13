@@ -1,208 +1,299 @@
 ---
 name: nano-banana
-description: Generate and edit images via the Gemini CLI Nano Banana extension (text-to-image, edit, restore, icons, patterns, stories, diagrams).
-allowed-tools: Bash(gemini:*)
----
+description: Generate and edit images via Gemini “Nano Banana” native image models over the REST API using curl (text-to-image, image editing, multi-turn image editing, high-res up to 4K, reference images, grounding, prompting guides, base64 decode workflows). Always write decoded images into ./nanobanana-output/.
+allowed-tools: Bash(curl:*), Bash(jq:*), Bash(base64:*), Bash(ls:*), Bash(file:*), Bash(sed:*), Bash(awk:*), Bash(mkdir:*)
+--------------------------------------------------------------------------------------------------------------------------
 
-# Nano Banana (Gemini CLI) — Image Generation Skill
+# Nano Banana (Gemini REST API via `curl`) — Image Generation & Editing Skill
 
-## Use this whenever the user asks to create, generate, make, draw, design, visualize, or edit any image/visual.
+Use this whenever the user asks to create, generate, make, draw, design, visualize, or edit any image/visual.
 
-Supported jobs (via Nano Banana extension):
+Nano Banana = Gemini’s native image generation models:
 
-* Text-to-image (`/generate`) ([GitHub][1])
-* Image editing (`/edit`) ([GitHub][1])
-* Photo restoration (`/restore`) ([GitHub][1])
-* Icons (`/icon`) ([GitHub][1])
-* Seamless patterns/textures (`/pattern`) ([GitHub][1])
-* Sequential/story images (`/story`) ([GitHub][1])
-* Technical diagrams (`/diagram`) ([GitHub][1])
-* Natural language interface (`/nanobanana`) ([GitHub][1])
+* **gemini-2.5-flash-image** (fast, default)
+* **gemini-3-pro-image-preview** (pro, supports **1K/2K/4K**, best for production)
+
+All generated images include a **SynthID watermark**.
 
 ---
 
-## One-time setup (verify before first use)
+## One-time setup
 
 ```bash
-# 1) Verify extension
-gemini extensions list | grep -i nanobanana
-
-# 2) Install if missing
-gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
-
-# 3) Verify API key (any ONE works; NANOBANANA_* preferred by the extension)
-[ -n "$NANOBANANA_GEMINI_API_KEY" ] && echo "NANOBANANA_GEMINI_API_KEY set"
-[ -n "$NANOBANANA_GOOGLE_API_KEY" ] && echo "NANOBANANA_GOOGLE_API_KEY set"
-[ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY set (fallback)"
-[ -n "$GOOGLE_API_KEY" ] && echo "GOOGLE_API_KEY set (fallback)"
+export GEMINI_API_KEY="YOUR_KEY_HERE"
 ```
 
-Prereqs: Gemini CLI, Node.js 20+ (project prereq), npm. ([GitHub][1])
+Base endpoint:
+
+* `https://generativelanguage.googleapis.com/v1beta/models/<MODEL>:generateContent`
 
 ---
 
-## Model selection
+# Output directory rule (MANDATORY)
 
-Default: `gemini-2.5-flash-image` ([GitHub][1])
-
-Optional (Nano Banana Pro):
+**All decoded images must be saved into:**
 
 ```bash
-export NANOBANANA_MODEL=gemini-3-pro-image-preview
+./nanobanana-output/
 ```
 
-([GitHub][1])
-
----
-
-## Execution rule
-
-Always run Gemini CLI commands with `--yolo` to auto-approve actions.
-
----
-
-## Commands (use the most specific command that matches the request)
-
-### `/generate` — text to image
-
-Core options: `--count=1..8`, `--styles="a,b"`, `--variations="lighting,angle,..."`, `--format=grid|separate`, `--seed=123`, `--preview` ([GitHub][1])
+Always ensure it exists before decoding:
 
 ```bash
-gemini --yolo '/generate "sunset over mountains" --count=3 --preview'
-gemini --yolo '/generate "mountain landscape" --styles="watercolor,oil-painting" --count=4'
-gemini --yolo '/generate "coffee shop interior" --variations="lighting,mood" --preview'
-```
-
-Styles (built-in list includes): `photorealistic, watercolor, oil-painting, sketch, pixel-art, anime, vintage, modern, abstract, minimalist` ([GitHub][1])
-Variations include: `lighting, angle, color-palette, composition, mood, season, time-of-day` ([GitHub][1])
-
----
-
-### `/edit` — modify an existing image
-
-```bash
-gemini --yolo '/edit my_photo.png "add sunglasses to the person"'
-gemini --yolo '/edit portrait.jpg "change background to a beach scene" --preview'
-```
-
-([GitHub][1])
-
----
-
-### `/restore` — repair/enhance an old/damaged photo
-
-```bash
-gemini --yolo '/restore old_family_photo.jpg "remove scratches and improve clarity"'
-gemini --yolo '/restore damaged_photo.png "enhance colors and fix tears" --preview'
-```
-
-([GitHub][1])
-
----
-
-### `/icon` — app icons, favicons, UI elements
-
-Options:
-
-* `--sizes="16,32,64,128,256,512,1024"`
-* `--type="app-icon|favicon|ui-element"`
-* `--style="flat|skeuomorphic|minimal|modern"`
-* `--format="png|jpeg"`
-* `--background="transparent|white|black|color"`
-* `--corners="rounded|sharp"` ([GitHub][1])
-
-```bash
-gemini --yolo '/icon "coffee cup logo" --sizes="64,128,256,512" --type="app-icon" --corners="rounded" --preview'
-gemini --yolo '/icon "company logo" --type="favicon" --sizes="16,32,64"'
-gemini --yolo '/icon "settings gear" --type="ui-element" --style="minimal" --background="transparent"'
+mkdir -p ./nanobanana-output
 ```
 
 ---
 
-### `/pattern` — seamless patterns & textures
+# Decoding images from `response.json` (REQUIRED)
 
-Options: `--size="128x128|256x256|512x512"`, `--type="seamless|texture|wallpaper"`, `--style="geometric|organic|abstract|floral|tech"`, `--density="sparse|medium|dense"`, `--colors="mono|duotone|colorful"`, `--repeat="tile|mirror"` ([GitHub][1])
+Gemini returns images as base64 in:
+
+* `.candidates[0].content.parts[].inline_data.data`
+
+Example part:
+
+```json
+{
+  "inline_data": {
+    "mime_type": "image/png",
+    "data": "BASE64..."
+  }
+}
+```
+
+You must decode into real files inside `./nanobanana-output/`.
+
+---
+
+## A) Decode the FIRST returned image → nanobanana-output
 
 ```bash
-gemini --yolo '/pattern "subtle geometric hexagons" --type="seamless" --colors="duotone" --density="sparse" --preview'
-gemini --yolo '/pattern "brushed metal surface" --type="texture" --style="tech" --colors="mono"'
-gemini --yolo '/pattern "art deco design" --type="wallpaper" --style="geometric" --size="512x512"'
+mkdir -p ./nanobanana-output
+
+jq -r '
+  .candidates[0].content.parts[]
+  | select(.inline_data != null)
+  | .inline_data.data
+' response.json | head -n 1 | base64 -d > ./nanobanana-output/output.png
+```
+
+Verify:
+
+```bash
+file ./nanobanana-output/output.png
 ```
 
 ---
 
-### `/story` — sequential images (process/tutorial/timeline/story)
-
-Options: `--steps=2..8`, `--type="story|process|tutorial|timeline"`, `--style="consistent|evolving"`, `--layout="separate|grid|comic"`, `--transition="smooth|dramatic|fade"`, `--format="storyboard|individual"` ([GitHub][1])
+## B) Decode ALL returned images → nanobanana-output
 
 ```bash
-gemini --yolo '/story "a seed growing into a tree" --steps=4 --type="process" --preview'
-gemini --yolo '/story "git workflow tutorial" --steps=6 --type="tutorial" --layout="comic"'
-gemini --yolo '/story "company logo evolution" --steps=4 --type="timeline" --transition="smooth"'
+mkdir -p ./nanobanana-output
+
+jq -r '
+  .candidates[0].content.parts[]
+  | select(.inline_data != null)
+  | .inline_data.data
+' response.json \
+| awk '{print NR ":" $0}' \
+| while IFS=":" read -r idx b64; do
+    echo "$b64" | base64 -d > "./nanobanana-output/image_${idx}.png"
+  done
+```
+
+Outputs:
+
+* `./nanobanana-output/image_1.png`
+* `./nanobanana-output/image_2.png`
+* …
+
+---
+
+## C) Preserve MIME type (PNG vs JPEG)
+
+Check MIME type:
+
+```bash
+jq -r '
+  .candidates[0].content.parts[]
+  | select(.inline_data != null)
+  | .inline_data.mime_type
+' response.json
+```
+
+If JPEG:
+
+```bash
+jq -r '
+  .candidates[0].content.parts[]
+  | select(.inline_data != null)
+  | .inline_data.data
+' response.json | head -n 1 | base64 -d > ./nanobanana-output/output.jpg
 ```
 
 ---
 
-### `/diagram` — flowcharts, architecture, network, DB schemas, wireframes, mindmaps, sequence diagrams
+## D) Save text + image outputs separately
 
-Options:
-
-* `--type="flowchart|architecture|network|database|wireframe|mindmap|sequence"`
-* `--style="professional|clean|hand-drawn|technical"`
-* `--layout="horizontal|vertical|hierarchical|circular"`
-* `--complexity="simple|detailed|comprehensive"`
-* `--colors="mono|accent|categorical"`
-* `--annotations="minimal|detailed"` ([GitHub][1])
+Print any text parts:
 
 ```bash
-gemini --yolo '/diagram "CI/CD pipeline with testing stages" --type="flowchart" --complexity="detailed" --preview'
-gemini --yolo '/diagram "microservices architecture for chat app" --type="architecture" --style="technical"'
-gemini --yolo '/diagram "REST API authentication flow" --type="sequence" --layout="vertical"'
-gemini --yolo '/diagram "e-commerce database schema" --type="database" --annotations="detailed"'
+jq -r '
+  .candidates[0].content.parts[]
+  | select(.text != null)
+  | .text
+' response.json
+```
+
+Decode images as above into `./nanobanana-output/`.
+
+---
+
+## E) One-liner: generate → decode directly into nanobanana-output
+
+```bash
+mkdir -p ./nanobanana-output
+
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [{"text": "A photorealistic nano banana dessert on a marble table"}]
+    }],
+    "generationConfig": {
+      "responseModalities": ["TEXT","IMAGE"]
+    }
+  }' \
+| tee response.json \
+| jq -r '.candidates[0].content.parts[] | select(.inline_data!=null) | .inline_data.data' \
+| head -n 1 \
+| base64 -d > ./nanobanana-output/output.png
 ```
 
 ---
 
-### `/nanobanana` — natural language interface (fallback)
+# Image Generation & Editing
 
-Use when the user request doesn’t map cleanly to a single command. ([GitHub][1])
+## 1) Text-to-image
 
 ```bash
-gemini --yolo '/nanobanana create a logo for my tech startup'
-gemini --yolo '/nanobanana I need 5 different versions of a cat illustration in various art styles'
-gemini --yolo '/nanobanana fix the lighting in sunset.jpg and make it more vibrant'
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [{"text": "Create a nano banana dish in a futuristic restaurant"}]
+    }],
+    "generationConfig": {
+      "responseModalities": ["TEXT","IMAGE"],
+      "imageConfig": { "aspectRatio": "1:1" }
+    }
+  }' > response.json
+```
+
+Decode:
+
+```bash
+mkdir -p ./nanobanana-output
+
+jq -r '.candidates[0].content.parts[] | select(.inline_data!=null) | .inline_data.data' \
+  response.json | base64 -d > ./nanobanana-output/generated.png
 ```
 
 ---
 
-## Files: inputs, outputs, naming
-
-* Output directory: `./nanobanana-output/` (auto-created). ([GitHub][1])
-* Smart filenames derived from prompt; duplicates get `_1`, `_2`, etc. ([GitHub][1])
-* When editing/restoring, input file search paths include:
-
-  1. current dir, 2) `./images/`, 3) `./input/`, 4) `./nanobanana-output/`, 5) `~/Downloads/`, 6) `~/Desktop/` ([GitHub][1])
-
----
-
-## Result handoff
-
-After each run:
-
-1. List outputs
+## 2) Image editing (text + image → image)
 
 ```bash
-ls -lt ./nanobanana-output/ | head
+BASE64_IMG="$(base64 -w 0 < cat.jpg)"
+
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"contents\": [{
+      \"parts\": [
+        {\"text\": \"Add sunglasses to the cat. Keep lighting realistic.\"},
+        {\"inline_data\": {\"mime_type\": \"image/jpeg\", \"data\": \"$BASE64_IMG\"}}
+      ]
+    }],
+    \"generationConfig\": {
+      \"responseModalities\": [\"TEXT\",\"IMAGE\"]
+    }
+  }" > response.json
 ```
 
-2. Present the newest file(s) to the user.
-3. If they want “options,” rerun with `--count=3` (or more) and/or `--styles=`.
+Decode into output directory:
+
+```bash
+mkdir -p ./nanobanana-output
+
+jq -r '.candidates[0].content.parts[] | select(.inline_data!=null) | .inline_data.data' \
+  response.json | base64 -d > ./nanobanana-output/edited.jpg
+```
 
 ---
 
-## Troubleshooting quick hits
+## 3) Multi-turn editing
 
-* “Command not recognized”: restart Gemini CLI; ensure extension installed under `~/.gemini/extensions/`. ([GitHub][1])
-* “No API key found”: set one of the supported env vars (prefer `NANOBANANA_GEMINI_API_KEY` / `NANOBANANA_GOOGLE_API_KEY`). ([GitHub][1])
-* “Image not found”: ensure the file is in one of the search locations above. ([GitHub][1])
+Always replay prior turns and decode intermediate outputs into:
+
+* `./nanobanana-output/step1.png`
+* `./nanobanana-output/step2.png`
+
+---
+
+## 4) High-res up to 4K (Gemini 3 Pro)
+
+```bash
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "role": "user",
+      "parts": [{"text": "A premium hero shot of a smart speaker on white background"}]
+    }],
+    "generationConfig": {
+      "responseModalities": ["TEXT","IMAGE"],
+      "imageConfig": {
+        "aspectRatio": "16:9",
+        "imageSize": "4K"
+      }
+    }
+  }' > response.json
+```
+
+Decode:
+
+```bash
+mkdir -p ./nanobanana-output
+
+jq -r '.candidates[0].content.parts[] | select(.inline_data!=null) | .inline_data.data' \
+  response.json | base64 -d > ./nanobanana-output/hero_4k.png
+```
+
+---
+
+## Result handoff (after each run)
+
+List newest outputs:
+
+```bash
+ls -lt ./nanobanana-output | head
+```
+
+---
+
+## Troubleshooting decode issues
+
+* Empty output → no inline_data returned; check `responseModalities`.
+* Invalid base64 → ensure `jq -r` raw output.
+* Wrong file type → inspect `.inline_data.mime_type`.
 
