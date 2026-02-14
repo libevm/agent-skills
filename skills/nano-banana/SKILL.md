@@ -2,8 +2,7 @@
 name: nano-banana
 description: Generate and edit images via Gemini “Nano Banana” native image models over the REST API using curl (text-to-image, image editing, multi-turn image editing, high-res up to 4K, reference images, grounding, prompting guides, base64 decode workflows). Always write decoded images into ./nanobanana-output/.
 allowed-tools: Bash(curl:*), Bash(jq:*), Bash(base64:*), Bash(ls:*), Bash(file:*), Bash(sed:*), Bash(awk:*), Bash(mkdir:*)
---------------------------------------------------------------------------------------------------------------------------
-
+---
 # Nano Banana (Gemini REST API via `curl`) — Image Generation & Editing Skill
 
 Use this whenever the user asks to create, generate, make, draw, design, visualize, or edit any image/visual.
