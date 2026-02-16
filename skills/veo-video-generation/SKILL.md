@@ -1,7 +1,7 @@
 ---
 name: veo-video-generation
-description: This skill teaches agents how to generate videos with **Veo 3.1** using the **Gemini API** with an emphasis on **REST** and **Python**. It covers: request/response shapes, long-running operations (polling), downloading results, and the major Veo controls (aspect ratio, resolution, duration, negative prompts, reference images, first/last frame interpolation, and video extension). :contentReference[oaicite:0]{index=0}
-allowed-tools: Bash(curl:*), Bash(jq:*), Bash(base64:*), Bash(ls:*), Bash(file:*), Bash(mkdir:*), Bash(sleep:*), Bash(cat:*), Bash(echo:*)
+description: "This skill teaches agents how to generate videos with Veo 3.1 using the Gemini API with an emphasis on REST and Python. It covers request/response shapes, long-running operations (polling), downloading results, and the major Veo controls (aspect ratio, resolution, duration, negative prompts, reference images, first/last frame interpolation, and video extension)."
+allowed-tools: "Bash(curl:*), Bash(jq:*), Bash(base64:*), Bash(ls:*), Bash(file:*), Bash(mkdir:*), Bash(sleep:*), Bash(cat:*), Bash(echo:*)"
 ---
 
 ## 1) What Veo 3.1 does
