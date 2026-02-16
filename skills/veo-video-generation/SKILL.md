@@ -95,6 +95,10 @@ For video extension input:
 > **Do NOT use** `{"inlineData": {"mimeType": "...", "data": "..."}}` — it is rejected by the API.
 > **Do NOT use** `{"fileUri": "...", "mimeType": "..."}` — it is also rejected by the API.
 
+### Parameter value types — CRITICAL
+- `durationSeconds` MUST be a **number** (e.g. `4`), **NOT a string** (e.g. `"4"`). Passing a string returns 400.
+- `aspectRatio`, `resolution`, `negativePrompt`, `personGeneration` are **strings**.
+
 ---
 
 ## 5) Supported Veo parameters (Gemini API)
@@ -107,8 +111,8 @@ In REST, these live under `"parameters": { ... }`. :contentReference[oaicite:12]
 - `aspectRatio`: `"16:9"` (default) or `"9:16"` :contentReference[oaicite:15]{index=15}
 - `resolution`: `"720p"` (default), `"1080p"` (8s only), `"4k"` (8s only)
   - Extension limited to **720p** :contentReference[oaicite:16]{index=16}
-- `durationSeconds`: `"4"`, `"6"`, `"8"`
-  - Must be `"8"` when using extension, reference images, or 1080p/4k :contentReference[oaicite:17]{index=17}
+- `durationSeconds`: `4`, `6`, `8` — **MUST be a number, NOT a string** (passing `"4"` returns 400: `"The value type for durationSeconds needs to be a number"`)
+  - Must be `8` when using extension, reference images, or 1080p/4k :contentReference[oaicite:17]{index=17}
 - `personGeneration` (region-restricted behavior described in docs)
   - Veo 3.1: text-to-video & extension `"allow_all"` only; image-to-video & interpolation & reference images `"allow_adult"` only :contentReference[oaicite:18]{index=18}
 - `seed` exists for Veo 3 models (does not guarantee determinism) :contentReference[oaicite:19]{index=19}
@@ -254,7 +258,7 @@ def generate_text_to_video(
     *,
     aspect_ratio: Optional[str] = None,
     resolution: Optional[str] = None,
-    duration_seconds: Optional[str] = None,
+    duration_seconds: Optional[int] = None,
     negative_prompt: Optional[str] = None,
 ) -> str:
     parameters: Dict[str, Any] = {}
