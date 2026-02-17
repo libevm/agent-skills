@@ -1,5 +1,5 @@
 ---
-name: duckduckgo_api
+name: duckduckgo-api
 description: Use DuckDuckGo Instant Answer API (no API key) for quick facts, definitions, related topics, and lightweight reference links. Not a full SERP web search API.
 allowed-tools: Bash(curl:*), Bash(jq:*)
 ---
