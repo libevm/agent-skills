@@ -7,6 +7,17 @@ description: Use the local bn CLI for Binary Ninja reversing work when a Binary 
 
 Use this skill when the user wants reverse-engineering work against an already-open Binary Ninja database and the local `bn` CLI is available.
 
+## Installation
+
+Install `bn` globally as a UV tool so it is available as a CLI binary on `$PATH`:
+
+```bash
+git clone git@github.com:banteg/bn.git ~/.local/share/bn
+uv tool install -e ~/.local/share/bn
+```
+
+Do **not** add `bn` as a dependency in a project's `pyproject.toml` — it must be used as a standalone CLI binary.
+
 ## Workflow
 
 1. Start with target discovery:
